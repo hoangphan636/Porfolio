@@ -449,7 +449,7 @@
        <img alt="User Avatar" class="rounded-full mr-4 hover:rotate-12 transition-transform duration-300" height="50" src="https://storage.googleapis.com/a1aa/image/AI9xz-BCiQ1VNnFiZnLcxZqKEq89CuU09im9mwBPvIM.jpg" width="50"/>
        <div>
         <h3 class="font-semibold hover:text-orange-500 transition-colors duration-300">
-         Brooklyn Simmons
+         Phan Nhật Hoàng
         </h3>
         <p class="text-gray-500 hover:text-gray-700 transition-colors duration-300">
          UI/UX Designer & Developer
@@ -516,70 +516,17 @@
         Weekly Streak
        </h4>
        <div class="flex justify-between items-center mt-2">
-        <p class="text-gray-500">
-         May 2024
-        </p>
-        <i class="fas fa-calendar-alt text-gray-500">
-        </i>
-       </div>
-       <div class="grid grid-cols-7 gap-2 mt-2">
-        <div class="text-center">
-         <p class="text-gray-500">
-          Mon
-         </p>
-         <p class="text-orange-500 font-semibold">
-          29
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Tue
-         </p>
-         <p class="text-orange-500 font-semibold">
-          30
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Wed
-         </p>
-         <p class="text-orange-500 font-semibold">
-          31
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Thu
-         </p>
-         <p class="text-gray-500">
-          1
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Fri
-         </p>
-         <p class="text-gray-500">
-          2
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Sat
-         </p>
-         <p class="text-gray-500">
-          3
-         </p>
-        </div>
-        <div class="text-center">
-         <p class="text-gray-500">
-          Sun
-         </p>
-         <p class="text-gray-500">
-          4
-         </p>
-        </div>
-       </div>
+        <p id="month-year" class="text-gray-500"></p>
+        <i class="fas fa-calendar-alt text-gray-500"></i>
+      </div>
+
+
+      <div id="week-grid" class="grid grid-cols-7 gap-2 mt-2">
+      
+      </div>
+
+
+
       </div>
       <div class="mb-4">
        <h4 class="font-semibold">
@@ -608,13 +555,12 @@
        <h4 class="font-semibold">
         Weekly Watch Time
        </h4>
+
        <div class="flex justify-between items-center mt-2">
-        <p class="text-gray-500">
-         May 2024
-        </p>
-        <i class="fas fa-calendar-alt text-gray-500">
-        </i>
-       </div>
+        <p id="month-year-past" class="text-gray-500"></p>
+        <i class="fas fa-calendar-alt text-gray-500"></i>
+      </div>
+       
        <div class="grid grid-cols-7 gap-2 mt-2">
         <div class="text-center">
          <p class="text-gray-500">
@@ -759,7 +705,7 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
             <div class="flex items-center">
-              <img src="https://storage.googleapis.com/a1aa/image/udemy-logo.png" alt="Udemy" class="w-10 h-10 rounded mr-3">
+              <i class="fas fa-certificate fa-beat text-3xl text-yellow-500 mr-3"></i>
               <div>
                 <p class="font-medium">Advanced UI/UX Design</p>
                 <p class="text-sm text-gray-500">Udemy</p>
@@ -769,7 +715,8 @@
           </div>
           <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
             <div class="flex items-center">
-              <img src="https://storage.googleapis.com/a1aa/image/coursera-logo.png" alt="Coursera" class="w-10 h-10 rounded mr-3">
+              <i class="fas fa-certificate fa-beat text-3xl text-yellow-500 mr-3"></i>
+
               <div>
                 <p class="font-medium">Web Development Specialization</p>
                 <p class="text-sm text-gray-500">Coursera</p>
@@ -777,6 +724,19 @@
             </div>
             <span class="text-orange-500 text-sm">2023</span>
           </div>
+
+         <div class="flex items-center justify-between p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300 shadow-md">
+  <div class="flex items-center">
+    <i class="fas fa-certificate fa-beat text-4xl text-yellow-500 mr-4"></i>
+    <div>
+      <p class="font-semibold text-lg text-gray-800">Bằng Tốt Nghiệp Đại Học</p>
+      <p class="text-sm text-gray-600">FPT University</p>
+    </div>
+  </div>
+  <span class="text-orange-600 text-sm font-medium"> 2023</span>
+</div>
+
+
         </div>
       </div>
       
@@ -949,6 +909,66 @@
   </div>
  </body>
 </html>
+<script>
+
+
+ document.addEventListener('DOMContentLoaded', () => {
+  // Current date
+  const now = new Date();
+
+  // Formatter for month-year (current and previous)
+  const monthYearFormatter = new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  // 1. Populate current month-year
+  const currMonthEl = document.getElementById('month-year');
+  if (currMonthEl) {
+    currMonthEl.textContent = monthYearFormatter.format(now);
+  }
+
+  // 2. Populate previous month-year
+  const prevMonthEl = document.getElementById('month-year-past');
+  if (prevMonthEl) {
+    // Use first day to avoid issues with shorter months
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    prevMonthEl.textContent = monthYearFormatter.format(prevMonthDate);
+  }
+
+  // 3. Populate week grid (Mon-Sun)
+  const weekGrid = document.getElementById('week-grid');
+  if (weekGrid) {
+    // Calculate Monday of the current week
+    const offsetToMonday = (now.getDay() + 6) % 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - offsetToMonday);
+
+    // Formatter for day names
+    const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+
+    // Build week days
+    const weekHtml = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const isToday = d.toDateString() === now.toDateString();
+      return `
+        <div class="text-center">
+          <p class="text-gray-500">${dayFormatter.format(d)}</p>
+          <p class="${isToday ? 'text-orange-500 font-semibold' : 'text-gray-500'}">
+            ${d.getDate()}
+          </p>
+        </div>
+      `;
+    }).join('');
+
+    weekGrid.innerHTML = weekHtml;
+  }
+});
+
+  
+</script>
+
 
 <style>
   body {
