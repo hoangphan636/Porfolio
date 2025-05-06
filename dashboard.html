@@ -1,0 +1,1028 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Dashboard
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+            font-family: 'Inter', sans-serif;
+        }
+   .draggable {
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+   .draggable.dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+   .drop-zone {
+            min-height: 100px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+   .drop-zone.drag-over {
+            border-color: #f97316;
+            background-color: rgba(249, 115, 22, 0.1);
+        }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Track the currently dragged element
+      let draggedElement = null;
+      let draggedElementSource = null;
+      let isDragClone = false;
+
+      function initDragAndDrop() {
+        const draggables = document.querySelectorAll('.draggable');
+        const dropZones = document.querySelectorAll('.drop-zone');
+
+        // Remove existing event listeners to prevent duplicates
+        draggables.forEach(draggable => {
+          draggable.removeEventListener('dragstart', dragStart);
+          draggable.removeEventListener('dragend', dragEnd);
+          
+          // Add event listeners
+          draggable.setAttribute('draggable', true);
+          draggable.addEventListener('dragstart', dragStart);
+          draggable.addEventListener('dragend', dragEnd);
+        });
+
+        dropZones.forEach(zone => {
+          zone.removeEventListener('dragover', dragOver);
+          zone.removeEventListener('dragleave', dragLeave);
+          zone.removeEventListener('drop', drop);
+          
+          // Add event listeners
+          zone.addEventListener('dragover', dragOver);
+          zone.addEventListener('dragleave', dragLeave);
+          zone.addEventListener('drop', drop);
+        });
+      }
+
+      function dragStart(e) {
+        // Store reference to the dragged element
+        draggedElement = this;
+        draggedElementSource = this.parentNode;
+        
+        // Add visual feedback
+        this.classList.add('dragging');
+        
+        // Store the HTML content for the drop
+        e.dataTransfer.setData('text/plain', this.outerHTML);
+        e.dataTransfer.effectAllowed = 'copyMove';
+        
+        // Add a semi-transparent effect
+        setTimeout(() => {
+          this.style.opacity = '0.5';
+        }, 0);
+        
+        // Set a flag to determine if we should clone or move
+        isDragClone = e.ctrlKey || e.metaKey; // Clone if Ctrl/Cmd key is pressed
+      }
+
+      function dragEnd(e) {
+        // Reset visual styles
+        if (draggedElement) {
+          draggedElement.classList.remove('dragging');
+          draggedElement.style.opacity = '1';
+          
+          // Only remove the original element if it was successfully dropped elsewhere
+          // and we're not cloning (handled in the drop function)
+          draggedElement = null;
+          draggedElementSource = null;
+        }
+      }
+
+      function dragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = isDragClone ? 'copy' : 'move';
+        this.classList.add('drag-over');
+        
+        // Optional: Add visual indicator for drop position
+        const afterElement = getDragAfterElement(this, e.clientY);
+        // You could add a visual indicator here if desired
+      }
+
+      function dragLeave(e) {
+        this.classList.remove('drag-over');
+      }
+
+      function drop(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        
+        // Get the data and create a new element
+        const data = e.dataTransfer.getData('text/plain');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = data;
+        const newElement = tempDiv.firstElementChild;
+        
+        if (newElement) {
+          // Add event listeners to the new element
+          newElement.setAttribute('draggable', true);
+          newElement.addEventListener('dragstart', dragStart);
+          newElement.addEventListener('dragend', dragEnd);
+          
+          // Find the position to insert the element
+          const afterElement = getDragAfterElement(this, e.clientY);
+          
+          if (afterElement) {
+            this.insertBefore(newElement, afterElement);
+          } else {
+            this.appendChild(newElement);
+          }
+          
+          // If we're moving (not cloning) and the original element still exists, remove it
+          if (!isDragClone && draggedElement && draggedElement.parentNode) {
+            draggedElement.parentNode.removeChild(draggedElement);
+          }
+          
+          // Add a nice animation to the newly dropped element
+          newElement.style.animation = 'fadeIn 0.5s';
+        }
+      }
+      
+      // Helper function to determine where to insert the dragged element
+      function getDragAfterElement(container, y) {
+        // Get all draggable elements in the container that aren't currently being dragged
+        const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+        
+        // Find the element after which to insert the dragged element
+        return draggableElements.reduce((closest, child) => {
+          const box = child.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          
+          // If the offset is negative but greater than the closest so far, this is the new closest
+          if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+          } else {
+            return closest;
+          }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+      }
+
+      // Initialize drag and drop
+      initDragAndDrop();
+
+      // Re-initialize drag and drop when content changes
+      const observer = new MutationObserver(() => {
+        initDragAndDrop();
+      });
+
+      // Observe changes in the drop zones
+      document.querySelectorAll('.drop-zone').forEach(zone => {
+        observer.observe(zone, { childList: true, subtree: true });
+      });
+    });
+  </script>
+ </head>
+ <body class="bg-gray-100">
+  <div class="flex">
+   <!-- Sidebar -->
+   <div class="w-64 bg-white h-screen p-6">
+    <div class="flex items-center mb-8">
+     <img alt="Logo" class="mr-2" height="40" src="https://storage.googleapis.com/a1aa/image/maXCERn2hJSaQRccyhlsR2-odW5IODhOjgcoLwTAluw.jpg" width="40"/>
+     <span class="text-xl font-bold">
+      Focotech
+     </span>
+    </div>
+    <nav class="space-y-4">
+     <a class="flex items-center text-orange-500 font-semibold nav-link" href="#">
+      <i class="fas fa-home mr-3"></i>
+      Overview
+     </a>
+     <a class="flex items-center text-gray-600 nav-link" href="#">
+      <i class="fas fa-book mr-3"></i>
+      Lessons
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-trophy mr-3">
+      </i>
+      Leaderboard
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-chart-line mr-3">
+      </i>
+      Skill Graph
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-graduation-cap mr-3">
+      </i>
+      Courses
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-certificate mr-3">
+      </i>
+      Certificates
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-envelope mr-3">
+      </i>
+      Messages
+      <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+       5
+      </span>
+     </a>
+     <a class="flex items-center text-gray-600" href="#">
+      <i class="fas fa-cog mr-3">
+      </i>
+      Settings
+     </a>
+    </nav>
+    <div class="mt-auto bg-orange-100 p-4 rounded-lg text-center">
+     <p class="text-orange-500 font-semibold">
+      Get Premium Now!
+     </p>
+     <p class="text-gray-600 text-sm">
+      Reach our special feature by subscribe our plan.
+     </p>
+     <button class="mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg">
+      Upgrade Now
+     </button>
+    </div>
+   </div>
+   <!-- Main Content -->
+   <div class="flex-1 p-6">
+    <div class="flex justify-between items-center mb-6">
+     <h1 class="text-2xl font-bold animate-fadeIn">
+      Dashboard
+     </h1>
+     <div class="flex items-center space-x-4">
+      <input class="border rounded-lg py-2 px-4 transition-all duration-300 hover:shadow-lg" placeholder="Search here..." type="text"/>
+      <i class="fas fa-bell text-gray-600 hover:scale-110 transition-transform duration-300"></i>
+      <i class="fas fa-cog text-gray-600 hover:scale-110 transition-transform duration-300"></i>
+      <img alt="User Avatar" class="rounded-full transition-transform duration-300 hover:scale-105" height="40" src="https://storage.googleapis.com/a1aa/image/AI9xz-BCiQ1VNnFiZnLcxZqKEq89CuU09im9mwBPvIM.jpg" width="40"/>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+     <!-- Continue Learning -->
+     <div class="lg:col-span-2">
+      <h2 class="text-xl font-semibold mb-4 animate-slideIn">
+       Continue Learning
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 drop-zone">
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <h3 class="font-semibold">
+         Advance UI/UX Design
+        </h3>
+        <p class="text-gray-500">
+         DESIGN
+        </p>
+        <div class="flex items-center mt-2">
+         <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div class="bg-orange-500 h-2.5 rounded-full watch-time-bar" style="width: 45%">
+          </div>
+         </div>
+         <span class="ml-2 text-gray-500 text-sm">
+          18/40 Lessons
+         </span>
+        </div>
+        <p class="text-gray-500 text-sm mt-2">
+         2 hours left
+        </p>
+        <button class="mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg">
+         Resume Course
+        </button>
+       </div>
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <h3 class="font-semibold">
+         Basic Web Development
+        </h3>
+        <p class="text-gray-500">
+         DEVELOPMENT
+        </p>
+        <div class="flex items-center mt-2">
+         <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div class="bg-orange-500 h-2.5 rounded-full" style="width: 45%">
+          </div>
+         </div>
+         <span class="ml-2 text-gray-500 text-sm">
+          18/40 Lessons
+         </span>
+        </div>
+        <p class="text-gray-500 text-sm mt-2">
+         2 hours left
+        </p>
+        <button class="mt-4 bg-orange-500 text-white py-2 px-4 rounded-lg">
+         Resume Course
+        </button>
+       </div>
+      </div>
+      <!-- Recommended Courses -->
+      <h2 class="text-xl font-semibold mt-8 mb-4">
+       Recommended Courses For You
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 drop-zone">
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <div class="relative">
+         <img alt="Webflow Tutorial" class="rounded-lg" height="200" src="https://storage.googleapis.com/a1aa/image/Y4zrn8r_Ig25t5WO4NqwaLbQCNfXtT93_KUDTwKTRAk.jpg" width="300"/>
+         <span class="absolute top-2 left-2 bg-orange-500 text-white text-xs rounded-full px-2 py-1">
+          New
+         </span>
+         <i class="fas fa-play-circle absolute bottom-2 right-2 text-white text-2xl">
+         </i>
+        </div>
+        <h3 class="font-semibold mt-4">
+         Webflow Tutorial: Build Your First Portfolio Website In a Minute
+        </h3>
+        <p class="text-gray-500">
+         Adam Smith
+        </p>
+        <div class="flex items-center mt-2">
+         <i class="fas fa-star text-orange-500">
+         </i>
+         <span class="ml-1 text-gray-500">
+          4.7 (32)
+         </span>
+         <span class="ml-auto text-gray-500">
+          $12.99
+         </span>
+        </div>
+       </div>
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <div class="relative">
+         <img alt="Design System" class="rounded-lg" height="200" src="https://storage.googleapis.com/a1aa/image/nOsWm7asONnmHC1UpctHGfl_qneEOXMtht1XktaaOcg.jpg" width="300"/>
+         <i class="fas fa-play-circle absolute bottom-2 right-2 text-white text-2xl">
+         </i>
+        </div>
+        <h3 class="font-semibold mt-4">
+         Basic To Advance Design System With UX Strategies
+        </h3>
+        <p class="text-gray-500">
+         Scott Warden
+        </p>
+        <div class="flex items-center mt-2">
+         <i class="fas fa-star text-orange-500">
+         </i>
+         <span class="ml-1 text-gray-500">
+          4.7 (540)
+         </span>
+         <span class="ml-auto text-gray-500">
+          $49.99
+         </span>
+        </div>
+       </div>
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <div class="relative">
+         <img alt="Design System" class="rounded-lg" height="200" src="https://storage.googleapis.com/a1aa/image/nOsWm7asONnmHC1UpctHGfl_qneEOXMtht1XktaaOcg.jpg" width="300"/>
+         <i class="fas fa-play-circle absolute bottom-2 right-2 text-white text-2xl">
+         </i>
+        </div>
+        <h3 class="font-semibold mt-4">
+         Basic To Advance Design System With UX Strategies
+        </h3>
+        <p class="text-gray-500">
+         Scott Warden
+        </p>
+        <div class="flex items-center mt-2">
+         <i class="fas fa-star text-orange-500">
+         </i>
+         <span class="ml-1 text-gray-500">
+          4.7 (540)
+         </span>
+         <span class="ml-auto text-gray-500">
+          $49.99
+         </span>
+        </div>
+       </div>
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <div class="relative">
+         <img alt="Design System" class="rounded-lg" height="200" src="https://storage.googleapis.com/a1aa/image/nOsWm7asONnmHC1UpctHGfl_qneEOXMtht1XktaaOcg.jpg" width="300"/>
+         <i class="fas fa-play-circle absolute bottom-2 right-2 text-white text-2xl">
+         </i>
+        </div>
+        <h3 class="font-semibold mt-4">
+         Basic To Advance Design System With UX Strategies
+        </h3>
+        <p class="text-gray-500">
+         Scott Warden
+        </p>
+        <div class="flex items-center mt-2">
+         <i class="fas fa-star text-orange-500">
+         </i>
+         <span class="ml-1 text-gray-500">
+          4.7 (540)
+         </span>
+         <span class="ml-auto text-gray-500">
+          $49.99
+         </span>
+        </div>
+       </div>
+       <div class="bg-white p-4 rounded-lg shadow draggable">
+        <div class="relative">
+         <img alt="Design System" class="rounded-lg" height="200" src="https://storage.googleapis.com/a1aa/image/nOsWm7asONnmHC1UpctHGfl_qneEOXMtht1XktaaOcg.jpg" width="300"/>
+         <i class="fas fa-play-circle absolute bottom-2 right-2 text-white text-2xl">
+         </i>
+        </div>
+        <h3 class="font-semibold mt-4">
+         Basic To Advance Design System With UX Strategies
+        </h3>
+        <p class="text-gray-500">
+         Scott Warden
+        </p>
+        <div class="flex items-center mt-2">
+         <i class="fas fa-star text-orange-500">
+         </i>
+         <span class="ml-1 text-gray-500">
+          4.7 (540)
+         </span>
+         <span class="ml-auto text-gray-500">
+          $49.99
+         </span>
+        </div>
+       </div>
+
+      </div>
+     </div>
+     <!-- User Details -->
+     <div class="bg-white p-4 rounded-lg shadow transform hover:scale-105 transition-all duration-300">
+      <div class="flex items-center mb-4 animate-fadeIn">
+       <img alt="User Avatar" class="rounded-full mr-4 hover:rotate-12 transition-transform duration-300" height="50" src="https://storage.googleapis.com/a1aa/image/AI9xz-BCiQ1VNnFiZnLcxZqKEq89CuU09im9mwBPvIM.jpg" width="50"/>
+       <div>
+        <h3 class="font-semibold hover:text-orange-500 transition-colors duration-300">
+         Brooklyn Simmons
+        </h3>
+        <p class="text-gray-500 hover:text-gray-700 transition-colors duration-300">
+         UI/UX Designer & Developer
+        </p>
+        <div class="flex items-center mt-1 hover:transform hover:translate-x-2 transition-all duration-300">
+         <i class="fas fa-medal text-orange-500 mr-2 animate-bounce"></i>
+         <p class="text-gray-500">
+          876 Points
+         </p>
+        </div>
+        <div class="flex items-center mt-1 hover:transform hover:translate-x-2 transition-all duration-300">
+         <i class="fas fa-fire text-orange-500 mr-2 animate-pulse"></i>
+         <p class="text-gray-500">
+          Level 5 Designer
+         </p>
+        </div>
+       </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+       <div class="bg-orange-50 p-3 rounded-lg text-center transform hover:scale-110 transition-all duration-300 cursor-pointer">
+        <i class="fas fa-trophy text-orange-500 text-xl mb-2 animate-bounce"></i>
+        <p class="text-xl font-semibold text-orange-500">54</p>
+        <p class="text-gray-500 text-sm">Days Streak</p>
+       </div>
+       <div class="bg-orange-50 p-3 rounded-lg text-center transform hover:scale-110 transition-all duration-300 cursor-pointer">
+        <i class="fas fa-target text-orange-500 text-xl mb-2 animate-pulse"></i>
+        <p class="text-xl font-semibold text-orange-500">06</p>
+        <p class="text-gray-500 text-sm">Goals In Month</p>
+       </div>
+       <div class="bg-orange-50 p-3 rounded-lg text-center transform hover:scale-110 transition-all duration-300 cursor-pointer">
+        <i class="fas fa-award text-orange-500 text-xl mb-2 animate-bounce"></i>
+        <p class="text-xl font-semibold text-orange-500">02</p>
+        <p class="text-gray-500 text-sm">2nd Place</p>
+       </div>
+      </div>
+      <div class="mb-6 bg-gradient-to-r from-orange-100 to-orange-50 p-4 rounded-lg">
+       <h4 class="font-semibold flex items-center">
+        <i class="fas fa-chart-line text-orange-500 mr-2"></i>
+        Achievement Progress
+       </h4>
+       <div class="space-y-3 mt-3">
+        <div>
+         <div class="flex justify-between text-sm mb-1">
+          <span class="text-gray-600">Course Completion</span>
+          <span class="text-orange-500">85%</span>
+         </div>
+         <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-orange-500 h-2 rounded-full transition-all duration-1000 animate-pulse" style="width: 85%"></div>
+         </div>
+        </div>
+        <div>
+         <div class="flex justify-between text-sm mb-1">
+          <span class="text-gray-600">Skill Mastery</span>
+          <span class="text-orange-500">70%</span>
+         </div>
+         <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-orange-500 h-2 rounded-full transition-all duration-1000 animate-pulse" style="width: 70%"></div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="mb-6">
+       <h4 class="font-semibold">
+        Weekly Streak
+       </h4>
+       <div class="flex justify-between items-center mt-2">
+        <p class="text-gray-500">
+         May 2024
+        </p>
+        <i class="fas fa-calendar-alt text-gray-500">
+        </i>
+       </div>
+       <div class="grid grid-cols-7 gap-2 mt-2">
+        <div class="text-center">
+         <p class="text-gray-500">
+          Mon
+         </p>
+         <p class="text-orange-500 font-semibold">
+          29
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Tue
+         </p>
+         <p class="text-orange-500 font-semibold">
+          30
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Wed
+         </p>
+         <p class="text-orange-500 font-semibold">
+          31
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Thu
+         </p>
+         <p class="text-gray-500">
+          1
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Fri
+         </p>
+         <p class="text-gray-500">
+          2
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Sat
+         </p>
+         <p class="text-gray-500">
+          3
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Sun
+         </p>
+         <p class="text-gray-500">
+          4
+         </p>
+        </div>
+       </div>
+      </div>
+      <div class="mb-4">
+       <h4 class="font-semibold">
+        Courses
+       </h4>
+       <div class="flex justify-between items-center mt-2">
+        <div class="text-center">
+         <p class="text-xl font-semibold">
+          3
+         </p>
+         <p class="text-gray-500">
+          Courses In Progress
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-xl font-semibold">
+          17
+         </p>
+         <p class="text-gray-500">
+          Courses Completed
+         </p>
+        </div>
+       </div>
+      </div>
+      <div>
+       <h4 class="font-semibold">
+        Weekly Watch Time
+       </h4>
+       <div class="flex justify-between items-center mt-2">
+        <p class="text-gray-500">
+         May 2024
+        </p>
+        <i class="fas fa-calendar-alt text-gray-500">
+        </i>
+       </div>
+       <div class="grid grid-cols-7 gap-2 mt-2">
+        <div class="text-center">
+         <p class="text-gray-500">
+          Mon
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-6 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          6hrs
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Tue
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-4 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          4hrs
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Wed
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-2 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          2hrs
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Thu
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-1 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          1hr
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Fri
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-3 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          3hrs
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Sat
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-2 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          2hrs
+         </p>
+        </div>
+        <div class="text-center">
+         <p class="text-gray-500">
+          Sun
+         </p>
+         <div class="relative h-16 bg-gray-200 rounded-lg">
+          <div class="absolute bottom-0 w-full bg-orange-500 h-1 rounded-lg">
+          </div>
+         </div>
+         <p class="text-gray-500 text-sm">
+          1hr
+         </p>
+        </div>
+       </div>
+      </div>
+    
+    
+    
+   
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-certificate text-orange-500 mr-2"></i>
+          Skill Badges
+        </h4>
+        
+        <div class="grid grid-cols-1 gap-6">
+          <div class="relative overflow-hidden bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex overflow-x-auto space-x-6 pb-6 scrollbar-hide relative" style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);">
+              <div class="text-center transform hover:scale-110 transition-all duration-300 flex-shrink-0 hover:shadow-xl rounded-xl p-4">
+                <div class="bg-gradient-to-br from-orange-100 to-orange-200 rounded-full p-6 mb-3 mx-auto w-20 h-20 flex items-center justify-center shadow-inner hover:shadow-lg transition-all duration-300">
+                  <i class="fab fa-html5 text-3xl text-orange-500 hover:animate-pulse"></i>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 mb-1">HTML5</p>
+                <p class="text-xs bg-orange-500 text-white px-3 py-1 rounded-full inline-block">Expert</p>
+              </div>
+              <div class="text-center transform hover:scale-110 transition-all duration-300 flex-shrink-0 hover:shadow-xl rounded-xl p-4">
+                <div class="bg-gradient-to-br from-orange-100 to-orange-200 rounded-full p-6 mb-3 mx-auto w-20 h-20 flex items-center justify-center shadow-inner hover:shadow-lg transition-all duration-300">
+                  <i class="fab fa-css3-alt text-3xl text-orange-500 hover:animate-pulse"></i>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 mb-1">CSS3</p>
+                <p class="text-xs bg-orange-400 text-white px-3 py-1 rounded-full inline-block">Advanced</p>
+              </div>
+              <div class="text-center transform hover:scale-110 transition-all duration-300 flex-shrink-0 hover:shadow-xl rounded-xl p-4">
+                <div class="bg-gradient-to-br from-orange-100 to-orange-200 rounded-full p-6 mb-3 mx-auto w-20 h-20 flex items-center justify-center shadow-inner hover:shadow-lg transition-all duration-300">
+                  <i class="fab fa-js text-3xl text-orange-500 hover:animate-pulse"></i>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 mb-1">JavaScript</p>
+                <p class="text-xs bg-orange-300 text-white px-3 py-1 rounded-full inline-block">Intermediate</p>
+              </div>
+              <div class="text-center transform hover:scale-110 transition-all duration-300 flex-shrink-0 hover:shadow-xl rounded-xl p-4">
+                <div class="bg-gradient-to-br from-orange-100 to-orange-200 rounded-full p-6 mb-3 mx-auto w-20 h-20 flex items-center justify-center shadow-inner hover:shadow-lg transition-all duration-300">
+                  <i class="fab fa-react text-3xl text-orange-500 hover:animate-pulse"></i>
+                </div>
+                <p class="text-sm font-semibold text-gray-700 mb-1">React</p>
+                <p class="text-xs bg-orange-200 text-white px-3 py-1 rounded-full inline-block">Beginner</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-graduation-cap text-orange-500 mr-2"></i>
+          Certifications
+        </h4>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
+            <div class="flex items-center">
+              <img src="https://storage.googleapis.com/a1aa/image/udemy-logo.png" alt="Udemy" class="w-10 h-10 rounded mr-3">
+              <div>
+                <p class="font-medium">Advanced UI/UX Design</p>
+                <p class="text-sm text-gray-500">Udemy</p>
+              </div>
+            </div>
+            <span class="text-orange-500 text-sm">2024</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
+            <div class="flex items-center">
+              <img src="https://storage.googleapis.com/a1aa/image/coursera-logo.png" alt="Coursera" class="w-10 h-10 rounded mr-3">
+              <div>
+                <p class="font-medium">Web Development Specialization</p>
+                <p class="text-sm text-gray-500">Coursera</p>
+              </div>
+            </div>
+            <span class="text-orange-500 text-sm">2023</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-chart-bar text-orange-500 mr-2"></i>
+          Learning Analytics
+        </h4>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <p class="text-gray-600 mb-2">Total Learning Hours</p>
+            <div class="flex items-center">
+              <i class="fas fa-clock text-orange-500 mr-2"></i>
+              <span class="text-2xl font-bold text-orange-500">156</span>
+            </div>
+          </div>
+          <div class="bg-orange-50 p-4 rounded-lg">
+            <p class="text-gray-600 mb-2">Completed Projects</p>
+            <div class="flex items-center">
+              <i class="fas fa-tasks text-orange-500 mr-2"></i>
+              <span class="text-2xl font-bold text-orange-500">23</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-600">Learning Consistency</span>
+              <span class="text-orange-500">92%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-orange-500 h-2 rounded-full transition-all duration-1000 animate-pulse" style="width: 92%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-gray-600">Project Success Rate</span>
+              <span class="text-orange-500">88%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-orange-500 h-2 rounded-full transition-all duration-1000 animate-pulse" style="width: 88%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-calendar-check text-orange-500 mr-2"></i>
+          Upcoming Events
+        </h4>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
+            <div class="flex items-center">
+              <div class="bg-orange-500 text-white rounded-lg p-2 mr-3 text-center min-w-[50px]">
+                <p class="text-sm font-bold">MAY</p>
+                <p class="text-lg font-bold">15</p>
+              </div>
+              <div>
+                <p class="font-medium">UI/UX Workshop</p>
+                <p class="text-sm text-gray-500">10:00 AM - 12:00 PM</p>
+              </div>
+            </div>
+            <button class="text-orange-500 hover:text-orange-600">
+              <i class="fas fa-bell"></i>
+            </button>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300">
+            <div class="flex items-center">
+              <div class="bg-orange-500 text-white rounded-lg p-2 mr-3 text-center min-w-[50px]">
+                <p class="text-sm font-bold">MAY</p>
+                <p class="text-lg font-bold">18</p>
+              </div>
+              <div>
+                <p class="font-medium">Code Review Session</p>
+                <p class="text-sm text-gray-500">2:00 PM - 4:00 PM</p>
+              </div>
+            </div>
+            <button class="text-orange-500 hover:text-orange-600">
+              <i class="fas fa-bell"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow mb-6">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-map-signs text-orange-500 mr-2"></i>
+          Learning Path Progress
+        </h4>
+        <div class="relative pb-12">
+          <div class="absolute h-full w-0.5 bg-orange-200 left-2"></div>
+          <div class="relative flex items-center mb-8">
+            <div class="absolute w-5 h-5 bg-orange-500 rounded-full left-0"></div>
+            <div class="ml-8">
+              <p class="font-medium">Fundamentals of UI/UX</p>
+              <p class="text-sm text-gray-500">Completed</p>
+              <div class="flex items-center mt-1">
+                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                <i class="fas fa-star text-yellow-400"></i>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex items-center mb-8">
+            <div class="absolute w-5 h-5 bg-orange-500 rounded-full left-0"></div>
+            <div class="ml-8">
+              <p class="font-medium">Advanced Design Principles</p>
+              <p class="text-sm text-gray-500">In Progress - 75% Complete</p>
+              <div class="w-48 bg-gray-200 rounded-full h-1.5 mt-2">
+                <div class="bg-orange-500 h-1.5 rounded-full" style="width: 75%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="relative flex items-center">
+            <div class="absolute w-5 h-5 bg-gray-300 rounded-full left-0"></div>
+            <div class="ml-8">
+              <p class="font-medium text-gray-500">Master Design Systems</p>
+              <p class="text-sm text-gray-400">Upcoming</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow draggable">
+        <h4 class="font-semibold mb-4 flex items-center">
+          <i class="fas fa-lightbulb text-orange-500 mr-2"></i>
+          Recommended Next Steps
+        </h4>
+        <div class="space-y-4">
+          <div class="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300 cursor-pointer">
+            <div class="bg-orange-500 p-2 rounded-lg mr-3">
+              <i class="fas fa-video text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium">Watch Advanced Animation Tutorial</p>
+              <p class="text-sm text-gray-500">Estimated time: 45 mins</p>
+            </div>
+            <i class="fas fa-chevron-right text-orange-500"></i>
+          </div>
+          <div class="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300 cursor-pointer">
+            <div class="bg-orange-500 p-2 rounded-lg mr-3">
+              <i class="fas fa-tasks text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium">Complete Design Challenge</p>
+              <p class="text-sm text-gray-500">Due in 3 days</p>
+            </div>
+            <i class="fas fa-chevron-right text-orange-500"></i>
+          </div>
+          <div class="flex items-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors duration-300 cursor-pointer">
+            <div class="bg-orange-500 p-2 rounded-lg mr-3">
+              <i class="fas fa-users text-white"></i>
+            </div>
+            <div class="flex-1">
+              <p class="font-medium">Join Design Community Discussion</p>
+              <p class="text-sm text-gray-500">20+ designers online</p>
+            </div>
+            <i class="fas fa-chevron-right text-orange-500"></i>
+          </div>
+        </div>
+      </div>   
+   
+    </div>
+
+  
+   </div>
+  </div>
+ </body>
+</html>
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+  .nav-link {
+    transition: all 0.3s ease;
+  }
+  .nav-link:hover {
+    transform: translateX(5px);
+    color: #f97316;
+  }
+  .bg-white {
+    animation: fadeIn 0.5s ease-out;
+  }
+  .rounded-lg {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .rounded-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .bg-orange-500 {
+    transition: width 0.3s ease;
+  }
+  .text-xl {
+    animation: slideIn 0.5s ease-out;
+  }
+  button {
+    transition: all 0.3s ease;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .fas {
+    transition: transform 0.3s ease;
+  }
+  .fas:hover {
+    transform: scale(1.1);
+  }
+  .draggable {
+    cursor: move;
+    user-select: none;
+  }
+  .draggable.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  .drop-zone {
+    min-height: 100px;
+    border: 2px dashed #e2e8f0;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  .drop-zone.drag-over {
+    border-color: #f97316;
+    background-color: rgba(249, 115, 22, 0.1);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideIn {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .watch-time-bar {
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scaleY(1); }
+    50% { transform: scaleY(1.05); }
+    100% { transform: scaleY(1); }
+  }
+</style>
