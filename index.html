@@ -1,19 +1,184 @@
-<html lang="en">
+<html lang="en" class="js">
  <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="Personal portfolio showcasing projects and skills">
+  <meta name="theme-color" content="#ffffff">
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>
-   Porfolio
-  </title>
+  <title>Porfolio - Personal Portfolio</title>
   <script src="https://cdn.tailwindcss.com">
   </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+  <script type="module"
+  src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.0.1/model-viewer.min.js">
+  </script>
   <style>
+   :root {
+     --primary-color: #f97316;
+     --secondary-color: #374151;
+     --background-color: #f3f4f6;
+     --gradient-start: #f97316;
+     --gradient-end: #f59e0b;
+   }
+   model-viewer {
+      width: 220px;
+      height: 140px;
+    }
+   /* Scroll animations with smooth fade and scale */
+   .scroll-reveal {
+     opacity: 0;
+     transform: translateY(20px) scale(0.95);
+     transition: 
+       opacity 1s cubic-bezier(0.4, 0, 0.2, 1),
+       transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+     will-change: opacity, transform;
+   }
+
+   .scroll-reveal.visible {
+     opacity: 1;
+     transform: translateY(0) scale(1);
+   }
+
+   /* Delay for different elements */
+   .scroll-reveal:nth-child(1) { transition-delay: 0.1s; }
+   .scroll-reveal:nth-child(2) { transition-delay: 0.2s; }
+   .scroll-reveal:nth-child(3) { transition-delay: 0.3s; }
+   .scroll-reveal:nth-child(4) { transition-delay: 0.4s; }
+   .scroll-reveal:nth-child(5) { transition-delay: 0.5s; }
+
+   /* Parallax effect */
+   .parallax {
+     background-attachment: fixed;
+     background-position: center;
+     background-repeat: no-repeat;
+     background-size: cover;
+   }
+
+   /* Floating animation */
+   .floating {
+     animation: float 3s ease-in-out infinite;
+   }
+
+   @keyframes float {
+     0% { transform: translateY(0px); }
+     50% { transform: translateY(-20px); }
+     100% { transform: translateY(0px); }
+   }
+
+   /* Gradient animations */
+   .gradient-bg {
+     background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+     background-size: 200% 200%;
+     animation: gradient 15s ease infinite;
+   }
+
+   @keyframes gradient {
+     0% { background-position: 0% 50%; }
+     50% { background-position: 100% 50%; }
+     100% { background-position: 0% 50%; }
+   }
+
+   /* Scale animation */
+   .scale-up {
+     transform: scale(0.8);
+     opacity: 0;
+     transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+   }
+
+   .scale-up.visible {
+     transform: scale(1);
+     opacity: 1;
+   }
+
+   /* Rotate animation */
+   .rotate {
+     animation: rotate 10s linear infinite;
+   }
+
+   @keyframes rotate {
+     from { transform: rotate(0deg); }
+     to { transform: rotate(360deg); }
+   }
+
+   /* Slide in animations */
+   .slide-in-left {
+     transform: translateX(-100%);
+     opacity: 0;
+     transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+   }
+
+   .slide-in-left.visible {
+     transform: translateX(0);
+     opacity: 1;
+   }
+
+   .slide-in-right {
+     transform: translateX(100%);
+     opacity: 0;
+     transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+   }
+
+   .slide-in-right.visible {
+     transform: translateX(0);
+     opacity: 1;
+   }
+
+   /* Fade in animations */
+   .fade-in {
+     opacity: 0;
+     transition: opacity 0.8s ease-out;
+   }
+
+   .fade-in.visible {
+     opacity: 1;
+   }
+
    body {
-            font-family: 'Inter', sans-serif;
-        }
-   .draggable {
+     font-family: 'Inter', sans-serif;
+     background-color: var(--background-color);
+     color: var(--secondary-color);
+   }
+
+   /* Accessibility improvements */
+   .sr-only {
+     position: absolute;
+     width: 1px;
+     height: 1px;
+     padding: 0;
+     margin: -1px;
+     overflow: hidden;
+     clip: rect(0, 0, 0, 0);
+     white-space: nowrap;
+     border: 0;
+   }
+
+   /* Performance optimizations */
+   .lazy-image {
+     opacity: 0;
+     transition: opacity 0.3s ease-in-out;
+   }
+
+   .lazy-image.loaded {
+     opacity: 1;
+   }
+
+   /* Smooth animations */
+   .fade-in {
+     animation: fadeIn 0.5s ease-in-out;
+   }
+
+   @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+   }
+
+   /* Responsive improvements */
+   @media (max-width: 768px) {
+     .grid-cols-2 {
+       grid-template-columns: 1fr;
+     }
+   }   .draggable {
             cursor: move;
             user-select: none;
             transition: all 0.3s ease;
@@ -35,6 +200,95 @@
         }
   </style>
   <script>
+    // Scroll animations with smooth reveal
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Add initial transform and opacity
+          entry.target.style.opacity = '0';
+          entry.target.style.transform = 'translateY(20px) scale(0.95)';
+          
+          // Wait for a moment then reveal
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, 100);
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    // Add delay for different elements
+    document.querySelectorAll('.scroll-reveal').forEach((el, index) => {
+      el.style.transitionDelay = `${index * 0.1}s`;
+    });
+
+    // Add scroll animations to elements
+    document.querySelectorAll('.scroll-reveal').forEach(el => {
+      scrollObserver.observe(el);
+    });
+
+    // Parallax effect
+    window.addEventListener('scroll', () => {
+      const parallaxElements = document.querySelectorAll('.parallax');
+      parallaxElements.forEach(el => {
+        const scrolled = window.pageYOffset;
+        const rate = 0.5; // Parallax speed
+        el.style.transform = `translateY(${scrolled * rate}px)`;
+      });
+    });
+
+    // Scale effect on scroll
+    window.addEventListener('scroll', () => {
+      const scaleElements = document.querySelectorAll('.scale-on-scroll');
+      scaleElements.forEach(el => {
+        const scrolled = window.pageYOffset;
+        const maxScale = 1.2;
+        const minScale = 0.8;
+        const scale = minScale + (maxScale - minScale) * (scrolled / window.innerHeight);
+        el.style.transform = `scale(${scale})`;
+      });
+    });
+
+    // Rotate effect on scroll
+    window.addEventListener('scroll', () => {
+      const rotateElements = document.querySelectorAll('.rotate-on-scroll');
+      rotateElements.forEach(el => {
+        const scrolled = window.pageYOffset;
+        const maxRotation = 360;
+        const rotation = (scrolled / window.innerHeight) * maxRotation;
+        el.style.transform = `rotate(${rotation}deg)`;
+      });
+    });
+
+    // Change background color on scroll
+    window.addEventListener('scroll', () => {
+      const scrolled = window.pageYOffset;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrolled / maxScroll;
+      
+      // Update background color based on scroll position
+      document.body.style.backgroundColor = `rgb(${243 + Math.floor(progress * 10)}, ${244 + Math.floor(progress * 10)}, ${246 + Math.floor(progress * 10)})`;
+    });
+
+    // Add animations to elements
+    document.querySelectorAll('.floating').forEach(el => {
+      el.style.animation = 'float 3s ease-in-out infinite';
+    });
+
+    // Lazy loading images
+    const images = document.querySelectorAll('.lazy-image');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('loaded');
+        }
+      });
+    });
+
+    images.forEach(img => observer.observe(img));
+
     document.addEventListener('DOMContentLoaded', function() {
       // Track the currently dragged element
       let draggedElement = null;
@@ -186,13 +440,21 @@
   </script>
  </head>
  <body class="bg-gray-100">
-  <div class="flex">
+  <div class="flex" role="main" aria-label="Portfolio main content">
    <!-- Sidebar -->
    <div class="w-64 bg-white h-screen p-6">
     <div class="flex items-center mb-8">
-     <img alt="Logo" class="mr-2" height="40" src="https://storage.googleapis.com/a1aa/image/maXCERn2hJSaQRccyhlsR2-odW5IODhOjgcoLwTAluw.jpg" width="40"/>
+     
      <span class="text-xl font-bold">
-      Focotech
+
+      <model-viewer
+      src="porfoliologo.glb"
+      alt="Mô hình 3D"
+      camera-controls
+      auto-rotate
+      loading="eager">
+    </model-viewer>
+
      </span>
     </div>
     <nav class="space-y-4">
@@ -251,7 +513,7 @@
     </div>
    </div>
    <!-- Main Content -->
-   <div class="flex-1 p-6">
+   <div class="flex-1 p-6" role="region" aria-label="Main portfolio content">
     <div class="flex justify-between items-center mb-6">
      <h1 class="text-2xl font-bold animate-fadeIn">
       Porfolio
